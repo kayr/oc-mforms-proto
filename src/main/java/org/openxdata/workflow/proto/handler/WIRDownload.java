@@ -2,6 +2,8 @@ package org.openxdata.workflow.proto.handler;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 import org.openxdata.mforms.model.ResponseHeader;
@@ -49,6 +51,7 @@ public class WIRDownload implements RequestHandler {
             wir.setFormReferences(formRefs);
             workitems.add(wir);
         }
+	sortByLabel(workitems);
         DataOutputStream outputStream = context.getOutputStream();
         try {
             outputStream.writeByte(ResponseHeader.STATUS_SUCCESS);
@@ -58,4 +61,13 @@ public class WIRDownload implements RequestHandler {
         }
 
     }
+
+	private void sortByLabel(Vector<MWorkItem> workitems) {
+		Collections.sort(workitems, new Comparator<MWorkItem>() {
+
+			public int compare(MWorkItem o1, MWorkItem o2) {
+				return o1.getDisplayName().compareToIgnoreCase(o2.getDisplayName());
+			}
+		});
+	}
 }
