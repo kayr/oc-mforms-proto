@@ -5,8 +5,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -23,16 +21,16 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.apache.log4j.Logger;
-import org.openxdata.mforms.server.XFormSerializer;
 import org.openxdata.mforms.model.ResponseHeader;
-import org.openxdata.mforms.model.StudyData;
 import org.openxdata.mforms.model.StudyDataList;
-import org.openxdata.mforms.model.UploadResponse;
-import org.openxdata.mformsproto.UploadDataProcessor;
+import org.openxdata.mforms.server.DeserializationListenerAdapter;
 import org.openxdata.proto.WFSubmissionContext;
 import org.openxdata.proto.exception.ProtocolException;
 import org.openxdata.workflow.mobile.model.MWorkItemData;
 import org.openxdata.workflow.mobile.model.MWorkItemDataList;
+import org.openxdata.workflow.mobile.model.WIRUploadResponse;
+import org.openxdata.workflow.mobile.model.WIRUploadResponseList;
+import org.openxdata.workflow.proto.handler.WIRUploadProcessor.FormStudy;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -42,11 +40,12 @@ import org.xml.sax.SAXException;
 /**
  *
  */
-public class WIRUpload implements RequestHandler {
+public class WIRUpload extends DeserializationListenerAdapter implements RequestHandler {
 
     private Logger log = Logger.getLogger(this.getClass().getName());
     private WFSubmissionContext context;
-    private XFormSerializer serializer = new XFormSerializer();
+  
+    private WIRUploadResponseList wirResponseList = new WIRUploadResponseList();
 
     @Override
     public void handleRequest(WFSubmissionContext context) throws ProtocolException {
@@ -57,41 +56,56 @@ public class WIRUpload implements RequestHandler {
             workitems.read(inputStream);
         } catch (Exception ex) {
             throw new ProtocolException("Failed to read the the workitemList", ex);
-
-
         }
-        Vector dataList = workitems.getDataList();
-        if (dataList != null) {
-            for (int i = 0; i < dataList.size(); i++) {
-                MWorkItemData mWirData = (MWorkItemData) dataList.elementAt(i);
+
+	Vector wirDataList = workitems.getDataList();
+        if (wirDataList != null) {
+            for (int i = 0; i < wirDataList.size(); i++) {
+                MWorkItemData mWirData = (MWorkItemData) wirDataList.elementAt(i);
                 processWIRData(mWirData);
             }
-        } else {
-            writeUploadResponse(context.getOutputStream());
-        }
+        } 
+        
+	writeUploadResponse(context.getOutputStream());
+        
     }
 
     private void processWIRData(MWorkItemData mWirData) throws ProtocolException {
-        DataOutputStream out = context.getOutputStream();
-
-        UploadDataProcessor uploadProcessor = new UploadDataProcessor();
-        serializer.addDeserializationListener(uploadProcessor);
 
         StudyDataList allStudies = mWirData.getFormData();
         Map<Integer, String> xForms = context.getXForms();
-
+	
+	WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(allStudies, xForms);
+	
         log.debug("upload for Workitem: [" + mWirData.getCaseId() + "] contains:  forms=" + allStudies.getStudies().size());
-
-        List<String> deserialise = deserialise(allStudies, xForms);
-	    for (String string : deserialise) {
-		    context.setUploadResult(processXML(mWirData.getCaseId(), string));
+	
+	
+	List<FormStudy> formStudies = uploadProcessor.getFormStudies();
+        
+	    for (FormStudy string : formStudies) {
+		    try{
+			    context.setUploadResult(addSubjectKeyToXML(mWirData.getCaseId(), string.getXml()));
+		    }catch(Exception e){
+			    log.error("Error While saving Form Data: "+e);
+			   addToUploadReponse(mWirData, string, e);
+		    }
 	    }
-        writeUploadResponse(out);
+
 
     }
-
+    
+    private void addToUploadReponse(MWorkItemData wirData,FormStudy formStudy, Exception e){
+	    WIRUploadResponse wirReponse = new WIRUploadResponse();
+	    wirReponse.setErrorMessage(e.getMessage());
+	    wirReponse.setFormDataId(formStudy.getFormData().getDataId());
+	    wirReponse.setFormDefId(formStudy.getFormData().getDefId());
+	    wirReponse.setWirRecId(wirData.getWirRecId());
+	    this.wirResponseList.addWIRUploadResponse(wirReponse);
+	    
+    }
+    
     private void writeUploadResponse(DataOutputStream out) throws ProtocolException {
-        UploadResponse reponse = new UploadResponse();
+        
 
         try {
             out.write(ResponseHeader.STATUS_SUCCESS);
@@ -100,34 +114,14 @@ public class WIRUpload implements RequestHandler {
         }
 
         try {
-            reponse.write(out);
+            wirResponseList.write(out);
         } catch (IOException ex) {
             throw new ProtocolException("Failed writiting response message to the stream");
         }
     }
 
-    private List<String> deserialise(StudyDataList data, Map<Integer, String> xformMap) {
-        List<String> xmlForms = new ArrayList<String>();
-        try {
-            Vector<StudyData> studies = data.getStudies();
-            Method deserialiseMethod = XFormSerializer.class.getDeclaredMethod("deSerialize", StudyData.class, List.class, Map.class);
-            deserialiseMethod.setAccessible(true);
-
-            for (StudyData studyData : studies) {
-                try {
-                    deserialiseMethod.invoke(serializer, studyData, xmlForms, xformMap);
-                } catch (Exception x) {
-                    log.error("Error while deserialising study data id: " + studyData.getId(), x);
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Exception while processing upload", ex);
-            throw new RuntimeException(ex);
-        }
-        return xmlForms;
-    }
-    
-	String processXML(String workitemID, String xml) {
+   
+	String addSubjectKeyToXML(String workitemID, String xml) {
 		try {
 			String eventID = extractEventOID(workitemID);
 			String newXML = updateXMLWithEventAttribute(eventID, xml);

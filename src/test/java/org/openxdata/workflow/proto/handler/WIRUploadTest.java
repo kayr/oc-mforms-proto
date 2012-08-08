@@ -52,7 +52,7 @@ public class WIRUploadTest {
 			+ "</earth>";
 		expectedResult = expectedResult.replaceAll("\\s+", "");
 
-		String result = instance.processXML("S0053&SC3", xml);
+		String result = instance.addSubjectKeyToXML("S0053&SC3", xml);
 		result = result.replaceAll("\\s+", "");
 		assertEquals(expectedResult, result);
 

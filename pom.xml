@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.openxdata</groupId>
             <artifactId>wf-mforms-model</artifactId>
-            <version>0.4-BETA</version>
+            <version>0.5-BETA-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
