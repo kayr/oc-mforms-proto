@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mforms.persistent.PersistentHelper;
@@ -21,18 +22,17 @@ public class WIRDownload implements RequestHandler {
 
     @Override
     public void handleRequest(WFSubmissionContext context) throws ProtocolException {
-
-        List<Object[]> availableWorkitems = context.availableWorkitems();
+		List<Map<String, Object>> availableWorkitems = context.availableWorkitems();
         Vector<MWorkItem> workitems = new Vector<MWorkItem>();
         System.out.println("Using Classloader: " + getClass().getClassLoader().toString());
-        for (Object[] objects : availableWorkitems) {
+        for (Map<String, Object> wirMap : availableWorkitems) {
             Vector<WIRFormReference> formRefs = new Vector<WIRFormReference>();
-            List<Object[]> frmRfrncObjcts = (List<Object[]>) objects[2];
-            for (Object[] frmRfrncObj : frmRfrncObjcts) {
+            List<Map<String, Object>> frmRfrncObjcts = (List<Map<String, Object>>) wirMap.get("formrefs");
+            for (Map<String, Object> formRef : frmRfrncObjcts) {
                 WIRFormReference wirFormRef = new WIRFormReference();
-                wirFormRef.setStudyId((Integer) frmRfrncObj[0]);
-                wirFormRef.setFormId((Integer) frmRfrncObj[1]);
-                List<String[]> preflled = (List<String[]>) frmRfrncObj[2];
+                wirFormRef.setStudyId((Integer) formRef.get("studyid"));
+                wirFormRef.setFormId((Integer) formRef.get("formid"));
+                List<String[]> preflled = (List<String[]>) formRef.get("prefills");
                 Vector<MQuestionMap> questionMaps = new Vector<MQuestionMap>();
                 for (String[] strings : preflled) {
                     MQuestionMap questionMap = new MQuestionMap();
@@ -46,8 +46,8 @@ public class WIRDownload implements RequestHandler {
                 formRefs.add(wirFormRef);
             }
             MWorkItem wir = new MWorkItem();
-            wir.setTaskName((String) objects[0]);
-            wir.setCaseId((String) objects[1]);
+            wir.setTaskName((String) wirMap.get("name"));
+            wir.setCaseId((String) wirMap.get("id"));
             wir.setFormReferences(formRefs);
             workitems.add(wir);
         }
