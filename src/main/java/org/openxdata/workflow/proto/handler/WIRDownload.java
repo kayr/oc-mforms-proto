@@ -11,6 +11,9 @@ import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mforms.persistent.PersistentHelper;
 import org.openxdata.proto.WFSubmissionContext;
 import org.openxdata.proto.exception.ProtocolException;
+import org.openxdata.proto.model.OxdWorkitem;
+import org.openxdata.proto.model.ParameterQuestionMap;
+import org.openxdata.proto.model.WorkitemFormRef;
 import org.openxdata.workflow.mobile.model.MQuestionMap;
 import org.openxdata.workflow.mobile.model.MWorkItem;
 import org.openxdata.workflow.mobile.model.WIRFormReference;
@@ -22,32 +25,32 @@ public class WIRDownload implements RequestHandler {
 
     @Override
     public void handleRequest(WFSubmissionContext context) throws ProtocolException {
-		List<Map<String, Object>> availableWorkitems = context.availableWorkitems();
+		List<OxdWorkitem> availableWorkitems = context.availableWorkitems();
         Vector<MWorkItem> workitems = new Vector<MWorkItem>();
         System.out.println("Using Classloader: " + getClass().getClassLoader().toString());
-        for (Map<String, Object> wirMap : availableWorkitems) {
+        for (OxdWorkitem workitem : availableWorkitems) {
             Vector<WIRFormReference> formRefs = new Vector<WIRFormReference>();
-            List<Map<String, Object>> frmRfrncObjcts = (List<Map<String, Object>>) wirMap.get("formrefs");
-            for (Map<String, Object> formRef : frmRfrncObjcts) {
+            List<WorkitemFormRef> frmRfrncObjcts = workitem.getWorkitemForms();
+            for (WorkitemFormRef formRef : frmRfrncObjcts) {
                 WIRFormReference wirFormRef = new WIRFormReference();
-                wirFormRef.setStudyId((Integer) formRef.get("studyid"));
-                wirFormRef.setFormId((Integer) formRef.get("formid"));
-                List<String[]> preflled = (List<String[]>) formRef.get("prefills");
+                wirFormRef.setStudyId((Integer) formRef.getStudyId());
+                wirFormRef.setFormId((Integer) formRef.getFormVersionId());
+                List<ParameterQuestionMap> preflled = formRef.getParamQuestionMap();
                 Vector<MQuestionMap> questionMaps = new Vector<MQuestionMap>();
-                for (String[] strings : preflled) {
+                for (ParameterQuestionMap strings : preflled) {
                     MQuestionMap questionMap = new MQuestionMap();
-                    questionMap.setParameter(strings[0]);
-                    questionMap.setQuestion(strings[1]);
-                    questionMap.setValue(strings[2]);
-                    questionMap.setOutput(Boolean.valueOf(strings[3]));
+                    questionMap.setParameter(strings.getWorkitemParameter());
+                    questionMap.setQuestion(strings.getQuestionVariable());
+                    questionMap.setValue(strings.getValue());
+                    questionMap.setOutput(strings.isReadOnly());
                     questionMaps.add(questionMap);
                 }
                 wirFormRef.setPrefilledQns(questionMaps);
                 formRefs.add(wirFormRef);
             }
             MWorkItem wir = new MWorkItem();
-            wir.setTaskName((String) wirMap.get("name"));
-            wir.setCaseId((String) wirMap.get("id"));
+            wir.setTaskName((String) workitem.getWorkitemName());
+            wir.setCaseId((String) workitem.getWorkitemId());
             wir.setFormReferences(formRefs);
             workitems.add(wir);
         }
