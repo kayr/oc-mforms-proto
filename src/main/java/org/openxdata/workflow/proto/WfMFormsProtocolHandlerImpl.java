@@ -7,10 +7,13 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
+import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mformsproto.MFormsProtocolHandlerImpl;
 import org.openxdata.proto.SubmissionContext;
 import org.openxdata.proto.WFSubmissionContext;
+import org.openxdata.proto.exception.ProtocolAccessDeniedException;
 import org.openxdata.proto.exception.ProtocolException;
 import org.openxdata.workflow.mobile.model.WFRequest;
 import org.openxdata.workflow.proto.handler.ProcessorCreator;
@@ -40,38 +43,56 @@ public class WfMFormsProtocolHandlerImpl extends MFormsProtocolHandlerImpl {
 	} catch (IOException ex) {
 	    throw new ProtocolException("Failed to read Action", ex);
 	}
-	if (action == WFRequest.ACTION_WORKFLOW) {
-	    String path = getPath(getClass());
-	    URL url = null;
-	    try {
-		url = new URL(path);
-	    } catch (MalformedURLException ex) {
-		throw new ProtocolException("Error while creating workitem handler");
-	    }
-	    String request = null;
 	    
-	    try {
-		request = din.readUTF();
-	    } catch (IOException ex) {
-		throw new ProtocolException("Error while Reading Workitem Command action");
-	    }
-	    
-	    
-	   // ProtocolClassLoader cl = new ProtocolClassLoader(new URL[]{url},Thread.currentThread().getContextClassLoader());
-	    ProcessorCreator handlerLoader = new ProcessorCreator();
-	    RequestHandler requestHandler = handlerLoader.buildRequestHandler(request);
-	    
-	    requestHandler.handleRequest((WFSubmissionContext)ctx);
-	    
-	} else {
-	    try {
-		in.reset();// 
-		super.handleRequest(ctx);
-	    } catch (IOException ex) {
+		    if (action == WFRequest.ACTION_WORKFLOW) {
+			    String path = getPath(getClass());
+			    URL url = null;
+			    try {
+				    url = new URL(path);
+			    } catch (MalformedURLException ex) {
+				    throw new ProtocolException("Error while creating workitem handler");
+			    }
+			    String request = null;
+			    
+			    try {
+				    request = din.readUTF();
+			    } catch (IOException ex) {
+				    throw new ProtocolException("Error while Reading Workitem Command action");
+			    }
+
+
+			    // ProtocolClassLoader cl = new ProtocolClassLoader(new URL[]{url},Thread.currentThread().getContextClassLoader());
+			    ProcessorCreator handlerLoader = new ProcessorCreator();
+			    RequestHandler requestHandler = handlerLoader.buildRequestHandler(request);
+			try {    
+			    requestHandler.handleRequest((WFSubmissionContext) ctx);
+			       }  catch(Exception e){
+				       			if (e instanceof ProtocolException) {
+				throw (ProtocolException) e;
+			} if ("OpenXDataSecurityException".equals(e.getClass().getSimpleName())) {
+				// note: don't have access to this class, so can't match by "instanceof"
+				throw new ProtocolAccessDeniedException(e.getMessage());
+			} else {
+					try {
+			ctx.getOutputStream().writeByte(ResponseHeader.STATUS_ERROR);
+		} catch (IOException e1) {
+			throw new ProtocolException("failed to write error response", e1);
+		}
+		throw new ProtocolException("error occure while relaying request: ["+request+"] to handler", e);
+			}
+		    
+	    } 
+		    } else {
+			try {
+				in.reset();// 
+				super.handleRequest(ctx);
+			} catch (IOException ex) {
 		throw new ProtocolException("Failed to Reset Input Stream", ex);
-	    }
-	   
-	}
+			}
+			    
+			    
+		    }
+	
 
     }
 

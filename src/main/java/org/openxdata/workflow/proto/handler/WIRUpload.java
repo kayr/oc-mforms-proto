@@ -21,6 +21,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.apache.log4j.Logger;
+import org.openxdata.mforms.model.FormData;
 import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mforms.model.StudyDataList;
 import org.openxdata.mforms.server.DeserializationListenerAdapter;
@@ -72,12 +73,12 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
     private void processWIRData(MWorkItemData mWirData) throws ProtocolException {
 
-        StudyDataList allStudies = mWirData.getFormData();
+        Vector<FormData> formData = mWirData.getFormDataList();
         Map<Integer, String> xForms = context.getXForms();
 	
-	WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(allStudies, xForms);
+	WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(formData, xForms);
 	
-        log.debug("upload for Workitem: [" + mWirData.getCaseId() + "] contains:  forms=" + allStudies.getStudies().size());
+        log.debug("upload for Workitem: [" + mWirData.getCaseId() + "] contains:  forms=" + formData.size());
 	
 	
 	List<FormStudy> formStudies = uploadProcessor.getFormStudies();
@@ -138,18 +139,10 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		if (workItemID == null) {
 			return result;
 		}
-		int begin = workItemID.indexOf('&');
-		if (begin == -1) {
-			return result;
-		}
-		workItemID = workItemID.trim();
 		
-		try {
+		int begin = workItemID.trim().indexOf('&');
+		if (begin > 0 && begin < workItemID.length()-1) {
 			result = workItemID.substring(begin + 1);
-			if(result.isEmpty())
-				result = "UNKNOWN";
-		} catch (Exception e) {
-			return result;
 		}
 		return result;
 	}
