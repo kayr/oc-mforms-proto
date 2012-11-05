@@ -17,7 +17,7 @@ import org.openxdata.mforms.server.XForm;
  *
  * @author kay
  */
-public class WIRUploadProcessor  {
+public class WIRUploadProcessor {
 
 	private List<FormStudy> formStudies = new ArrayList<FormStudy>();
 	private Vector<FormData> dataList;
@@ -28,7 +28,6 @@ public class WIRUploadProcessor  {
 		this.xformMap = xformMap;
 
 	}
-
 
 	public List<FormStudy> getFormStudies() {
 		try {
@@ -42,12 +41,12 @@ public class WIRUploadProcessor  {
 	}
 
 	private void deserialise() throws Exception {
-		
-			for (FormData formData : dataList) {
-				String xml = deserializeFormToXML(formData, xformMap);
-				formStudies.add(new FormStudy(formData,  xml));
-			}
-		
+
+		for (FormData formData : dataList) {
+			String xml = deserializeFormToXML(formData, xformMap);
+			formStudies.add(new FormStudy(formData, xml));
+		}
+
 	}
 
 	private String deserializeFormToXML(FormData formData, Map<Integer, String> xformMap) throws Exception {
@@ -70,7 +69,7 @@ public class WIRUploadProcessor  {
 		private FormData formData;
 		private String xml;
 
-		public FormStudy(FormData formData,String xml) {
+		public FormStudy(FormData formData, String xml) {
 			this.formData = formData;
 			this.xml = xml;
 		}

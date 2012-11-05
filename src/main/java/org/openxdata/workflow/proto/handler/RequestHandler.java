@@ -13,14 +13,14 @@ import org.openxdata.proto.exception.ProtocolException;
  * will have to know how to read the data and send the send the required reply;
  * @author kay
  */
-public interface RequestHandler
-{
-    /**
-     * Processes the request and and builds the necessary reply
-     * @param user User who sent request
-     * @param is Input stream from the requester
-     * @param os Output stream for the requester.
-     * @throws IOException
-     */
-    public void handleRequest(WFSubmissionContext context) throws ProtocolException;
+public interface RequestHandler {
+
+	/**
+	 * Processes the request and and builds the necessary reply
+	 * @param user User who sent request
+	 * @param is Input stream from the requester
+	 * @param os Output stream for the requester.
+	 * @throws IOException
+	 */
+	public void handleRequest(WFSubmissionContext context) throws ProtocolException;
 }

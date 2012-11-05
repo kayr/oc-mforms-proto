@@ -43,85 +43,83 @@ import org.xml.sax.SAXException;
  */
 public class WIRUpload extends DeserializationListenerAdapter implements RequestHandler {
 
-    private Logger log = Logger.getLogger(this.getClass().getName());
-    private WFSubmissionContext context;
-  
-    private WIRUploadResponseList wirResponseList = new WIRUploadResponseList();
+	private Logger log = Logger.getLogger(this.getClass().getName());
+	private WFSubmissionContext context;
+	private WIRUploadResponseList wirResponseList = new WIRUploadResponseList();
 
-    @Override
-    public void handleRequest(WFSubmissionContext context) throws ProtocolException {
-        this.context = context;
-        DataInputStream inputStream = context.getInputStream();
-        MWorkItemDataList workitems = new MWorkItemDataList();
-        try {
-            workitems.read(inputStream);
-        } catch (Exception ex) {
-            throw new ProtocolException("Failed to read the the workitemList", ex);
-        }
+	@Override
+	public void handleRequest(WFSubmissionContext context) throws ProtocolException {
+		this.context = context;
+		DataInputStream inputStream = context.getInputStream();
+		MWorkItemDataList workitems = new MWorkItemDataList();
+		try {
+			workitems.read(inputStream);
+		} catch (Exception ex) {
+			throw new ProtocolException("Failed to read the the workitemList", ex);
+		}
 
-	Vector wirDataList = workitems.getDataList();
-        if (wirDataList != null) {
-            for (int i = 0; i < wirDataList.size(); i++) {
-                MWorkItemData mWirData = (MWorkItemData) wirDataList.elementAt(i);
-                processWIRData(mWirData);
-            }
-        } 
-        
-	writeUploadResponse(context.getOutputStream());
-        
-    }
+		Vector wirDataList = workitems.getDataList();
+		if (wirDataList != null) {
+			for (int i = 0; i < wirDataList.size(); i++) {
+				MWorkItemData mWirData = (MWorkItemData) wirDataList.elementAt(i);
+				processWIRData(mWirData);
+			}
+		}
 
-    private void processWIRData(MWorkItemData mWirData) throws ProtocolException {
+		writeUploadResponse(context.getOutputStream());
 
-        Vector<FormData> formData = mWirData.getFormDataList();
-        Map<Integer, String> xForms = context.getXForms();
-	
-	WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(formData, xForms);
-	
-        log.debug("upload for Workitem: [" + mWirData.getCaseId() + "] contains:  forms=" + formData.size());
-	
-	
-	List<FormStudy> formStudies = uploadProcessor.getFormStudies();
-        
-	    for (FormStudy string : formStudies) {
-		    try{
-			    context.setUploadResult(addSubjectKeyToXML(mWirData.getCaseId(), string.getXml()));
-		    }catch(Exception e){
-			    log.error("Error While saving Form Data: "+e);
-			   addToUploadReponse(mWirData, string, e);
-		    }
-	    }
+	}
+
+	private void processWIRData(MWorkItemData mWirData) throws ProtocolException {
+
+		Vector<FormData> formData = mWirData.getFormDataList();
+		Map<Integer, String> xForms = context.getXForms();
+
+		WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(formData, xForms);
+
+		log.debug("upload for Workitem: [" + mWirData.getCaseId() + "] contains:  forms=" + formData.size());
 
 
-    }
-    
-    private void addToUploadReponse(MWorkItemData wirData,FormStudy formStudy, Exception e){
-	    WIRUploadResponse wirReponse = new WIRUploadResponse();
-	    wirReponse.setErrorMessage(e.getMessage());
-	    wirReponse.setFormDataId(formStudy.getFormData().getDataId());
-	    wirReponse.setFormDefId(formStudy.getFormData().getDefId());
-	    wirReponse.setWirRecId(wirData.getWirRecId());
-	    this.wirResponseList.addWIRUploadResponse(wirReponse);
-	    
-    }
-    
-    private void writeUploadResponse(DataOutputStream out) throws ProtocolException {
-        
+		List<FormStudy> formStudies = uploadProcessor.getFormStudies();
 
-        try {
-            out.write(ResponseHeader.STATUS_SUCCESS);
-        } catch (IOException ex) {
-            throw new ProtocolException("Failed to write the Response Header in Upload", ex);
-        }
+		for (FormStudy string : formStudies) {
+			try {
+				context.setUploadResult(addSubjectKeyToXML(mWirData.getCaseId(), string.getXml()));
+			} catch (Exception e) {
+				log.error("Error While saving Form Data: " + e);
+				addToUploadReponse(mWirData, string, e);
+			}
+		}
 
-        try {
-            wirResponseList.write(out);
-        } catch (IOException ex) {
-            throw new ProtocolException("Failed writiting response message to the stream");
-        }
-    }
 
-   
+	}
+
+	private void addToUploadReponse(MWorkItemData wirData, FormStudy formStudy, Exception e) {
+		WIRUploadResponse wirReponse = new WIRUploadResponse();
+		wirReponse.setErrorMessage(e.getMessage());
+		wirReponse.setFormDataId(formStudy.getFormData().getDataId());
+		wirReponse.setFormDefId(formStudy.getFormData().getDefId());
+		wirReponse.setWirRecId(wirData.getWirRecId());
+		this.wirResponseList.addWIRUploadResponse(wirReponse);
+
+	}
+
+	private void writeUploadResponse(DataOutputStream out) throws ProtocolException {
+
+
+		try {
+			out.write(ResponseHeader.STATUS_SUCCESS);
+		} catch (IOException ex) {
+			throw new ProtocolException("Failed to write the Response Header in Upload", ex);
+		}
+
+		try {
+			wirResponseList.write(out);
+		} catch (IOException ex) {
+			throw new ProtocolException("Failed writiting response message to the stream");
+		}
+	}
+
 	String addSubjectKeyToXML(String workitemID, String xml) {
 		try {
 			String eventID = extractEventOID(workitemID);
@@ -132,21 +130,20 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		}
 		return xml;
 	}
-    
-    
+
 	String extractEventOID(String workItemID) {
 		String result = "UNKNOWN";
 		if (workItemID == null) {
 			return result;
 		}
-		
+
 		int begin = workItemID.trim().indexOf('&');
-		if (begin > 0 && begin < workItemID.length()-1) {
+		if (begin > 0 && begin < workItemID.length() - 1) {
 			result = workItemID.substring(begin + 1);
 		}
 		return result;
 	}
-	
+
 	private String updateXMLWithEventAttribute(String eventOID, String xml) throws ParserConfigurationException, SAXException, IOException, TransformerConfigurationException, TransformerException {
 		Document doc = getDocument(xml);
 		Node firstChild = doc.getFirstChild();
@@ -157,17 +154,16 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		String resultXML = fromDocToString(doc);
 		return resultXML;
 	}
-	
-	private String fromDocToString(Document doc) throws TransformerConfigurationException, TransformerException{
+
+	private String fromDocToString(Document doc) throws TransformerConfigurationException, TransformerException {
 		Transformer transformer = getTranformer();
-		
+
 		StreamResult result = new StreamResult(new StringWriter());
 		DOMSource source = new DOMSource(doc);
 		transformer.transform(source, result);
 		String xml = result.getWriter().toString();
 		return xml;
 	}
-	
 	private Transformer mTranformer;
 
 	private Transformer getTranformer() throws IllegalArgumentException, TransformerConfigurationException, TransformerFactoryConfigurationError {
@@ -177,7 +173,6 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		}
 		return mTranformer;
 	}
-	
 	private DocumentBuilder mDocBuilder;
 
 	private Document getDocument(String xml) throws SAXException, IOException, ParserConfigurationException {
@@ -189,6 +184,4 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		Document doc = mDocBuilder.parse(new ByteArrayInputStream(xml.getBytes()));
 		return doc;
 	}
-	
-	
 }
