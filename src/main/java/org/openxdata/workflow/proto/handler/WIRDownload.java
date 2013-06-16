@@ -5,15 +5,14 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mforms.persistent.PersistentHelper;
 import org.openxdata.proto.WFSubmissionContext;
 import org.openxdata.proto.exception.ProtocolException;
-import org.openxdata.proto.model.OxdWorkitem;
+import org.openxdata.proto.model.WorkItem;
 import org.openxdata.proto.model.ParameterQuestionMap;
-import org.openxdata.proto.model.WorkitemFormRef;
+import org.openxdata.proto.model.WorkItemFormRef;
 import org.openxdata.workflow.mobile.model.MQuestionMap;
 import org.openxdata.workflow.mobile.model.MWorkItem;
 import org.openxdata.workflow.mobile.model.WIRFormReference;
@@ -25,13 +24,13 @@ public class WIRDownload implements RequestHandler {
 
 	@Override
 	public void handleRequest(WFSubmissionContext context) throws ProtocolException {
-		List<OxdWorkitem> availableWorkitems = context.availableWorkitems();
+		List<WorkItem> availableWorkitems = context.availableWorkitems();
 		Vector<MWorkItem> workitems = new Vector<MWorkItem>();
 		System.out.println("Using Classloader: " + getClass().getClassLoader().toString());
-		for (OxdWorkitem workitem : availableWorkitems) {
+		for (WorkItem workitem : availableWorkitems) {
 			Vector<WIRFormReference> formRefs = new Vector<WIRFormReference>();
-			List<WorkitemFormRef> frmRfrncObjcts = workitem.getWorkitemForms();
-			for (WorkitemFormRef formRef : frmRfrncObjcts) {
+			List<WorkItemFormRef> frmRfrncObjcts = workitem.getWorkitemForms();
+			for (WorkItemFormRef formRef : frmRfrncObjcts) {
 				WIRFormReference wirFormRef = new WIRFormReference();
 				wirFormRef.setStudyId((Integer) formRef.getStudyId());
 				wirFormRef.setFormId((Integer) formRef.getFormVersionId());
