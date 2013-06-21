@@ -9,7 +9,7 @@ import org.openxdata.proto.WFSubmissionContext;
 import org.openxdata.proto.exception.ProtocolException;
 
 /**
- * Handle all stream requests from the mobile client.The implemetation of this class
+ * Handle all stream requests from the mobile client.The implementation of this class
  * will have to know how to read the data and send the send the required reply;
  * @author kay
  */

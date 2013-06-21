@@ -24,20 +24,19 @@ public class ProcessorCreator {
 		this.loader = loader;
 	}
 
-	public RequestHandler buildRequestHandler(String type) throws ProtocolNotFoundException, ProtocolException {
-		RequestHandler rh = null;
+	public RequestHandler buildRequestHandler(String type) throws ProtocolException {
 		try {
-			rh = loadClassForQuery(type).newInstance();
+			return loadClassForQuery(type).newInstance();
 		} catch (ClassNotFoundException ex) {
 			throw new ProtocolNotFoundException("Protocol Handler Not Founder", ex);
 		} catch (Exception ex) {
 			throw new ProtocolException("Error While Creating Handler: " + ex);
 
 		}
-		return rh;
 	}
 
-	private Class<RequestHandler> loadClassForQuery(String handlerClassName) throws ClassNotFoundException {
+	@SuppressWarnings({"EmptyCatchBlock", "unchecked"})
+    private Class<RequestHandler> loadClassForQuery(String handlerClassName) throws ClassNotFoundException {
 		try {
 			return (Class<RequestHandler>) Class.forName("org.openxdata.workflow.proto.handler." + handlerClassName);
 		} catch (ClassNotFoundException classNotFoundException) {

@@ -26,14 +26,14 @@ public class WIRDownload implements RequestHandler {
 	public void handleRequest(WFSubmissionContext context) throws ProtocolException {
 		List<WorkItem> availableWorkitems = context.availableWorkitems();
 		Vector<MWorkItem> workitems = new Vector<MWorkItem>();
-		System.out.println("Using Classloader: " + getClass().getClassLoader().toString());
+		System.out.println("Using ClassLoader: " + getClass().getClassLoader().toString());
 		for (WorkItem workitem : availableWorkitems) {
-			Vector<WIRFormReference> formRefs = new Vector<WIRFormReference>();
-			List<WorkItemFormRef> frmRfrncObjcts = workitem.getWorkitemForms();
-			for (WorkItemFormRef formRef : frmRfrncObjcts) {
+			Vector<WIRFormReference> mobileFormRefs = new Vector<WIRFormReference>();
+			List<WorkItemFormRef> workItemFormRefs = workitem.getWorkitemForms();
+			for (WorkItemFormRef formRef : workItemFormRefs) {
 				WIRFormReference wirFormRef = new WIRFormReference();
-				wirFormRef.setStudyId((Integer) formRef.getStudyId());
-				wirFormRef.setFormId((Integer) formRef.getFormVersionId());
+				wirFormRef.setStudyId(formRef.getStudyId());
+				wirFormRef.setFormId(formRef.getFormVersionId());
 				List<ParameterQuestionMap> preflled = formRef.getParamQuestionMap();
 				Vector<MQuestionMap> questionMaps = new Vector<MQuestionMap>();
 				for (ParameterQuestionMap strings : preflled) {
@@ -45,12 +45,12 @@ public class WIRDownload implements RequestHandler {
 					questionMaps.add(questionMap);
 				}
 				wirFormRef.setPrefilledQns(questionMaps);
-				formRefs.add(wirFormRef);
+				mobileFormRefs.add(wirFormRef);
 			}
 			MWorkItem wir = new MWorkItem();
-			wir.setTaskName((String) workitem.getWorkitemName());
-			wir.setCaseId((String) workitem.getWorkitemId());
-			wir.setFormReferences(formRefs);
+			wir.setTaskName(workitem.getWorkitemName());
+			wir.setCaseId(workitem.getWorkitemId());
+			wir.setFormReferences(mobileFormRefs);
 			workitems.add(wir);
 		}
 		sortByLabel(workitems);

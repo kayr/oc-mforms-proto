@@ -43,7 +43,7 @@ import org.xml.sax.SAXException;
  */
 public class WIRUpload extends DeserializationListenerAdapter implements RequestHandler {
 
-	private Logger log = Logger.getLogger(this.getClass().getName());
+	private final Logger log = Logger.getLogger(this.getClass().getName());
 	private WFSubmissionContext context;
 	private WIRUploadResponseList wirResponseList = new WIRUploadResponseList();
 
@@ -70,9 +70,9 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
 	}
 
-	private void processWIRData(MWorkItemData mWirData) throws ProtocolException {
+	private void processWIRData(MWorkItemData mWirData) {
 
-		Vector<FormData> formData = mWirData.getFormDataList();
+		@SuppressWarnings("unchecked") Vector<FormData> formData = mWirData.getFormDataList();
 		Map<Integer, String> xForms = context.getXForms();
 
 		WIRUploadProcessor uploadProcessor = new WIRUploadProcessor(formData, xForms);
@@ -123,8 +123,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 	String addSubjectKeyToXML(String workitemID, String xml) {
 		try {
 			String eventID = extractEventOID(workitemID);
-			String newXML = updateXMLWithEventAttribute(eventID, xml);
-			return newXML;
+			return updateXMLWithEventAttribute(eventID, xml);
 		} catch (Exception ex) {
 			log.error("Error while update the workitem XML", ex);
 		}
@@ -144,7 +143,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		return result;
 	}
 
-	private String updateXMLWithEventAttribute(String eventOID, String xml) throws ParserConfigurationException, SAXException, IOException, TransformerConfigurationException, TransformerException {
+	private String updateXMLWithEventAttribute(String eventOID, String xml) throws ParserConfigurationException, SAXException, IOException, TransformerException {
 		Document doc = getDocument(xml);
 		Node firstChild = doc.getFirstChild();
 		NamedNodeMap attributes = firstChild.getAttributes();
@@ -155,7 +154,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 		return resultXML;
 	}
 
-	private String fromDocToString(Document doc) throws TransformerConfigurationException, TransformerException {
+	private String fromDocToString(Document doc) throws TransformerException {
 		Transformer transformer = getTranformer();
 
 		StreamResult result = new StreamResult(new StringWriter());
