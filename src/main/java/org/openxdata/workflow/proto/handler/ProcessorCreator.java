@@ -9,42 +9,41 @@ import org.openxdata.proto.exception.ProtocolException;
 import org.openxdata.proto.exception.ProtocolNotFoundException;
 
 /**
- *
  * @author kay
  */
 public class ProcessorCreator {
 
-	private Logger log = Logger.getLogger(this.getClass().getName());
-	private ClassLoader loader;
+    private Logger log = Logger.getLogger(this.getClass().getName());
+    private ClassLoader loader;
 
-	public ProcessorCreator() {
-	}
+    public ProcessorCreator() {
+    }
 
-	public ProcessorCreator(ClassLoader loader) {
-		this.loader = loader;
-	}
+    public ProcessorCreator(ClassLoader loader) {
+        this.loader = loader;
+    }
 
-	public RequestHandler buildRequestHandler(String type) throws ProtocolException {
-		try {
-			return loadClassForQuery(type).newInstance();
-		} catch (ClassNotFoundException ex) {
-			throw new ProtocolNotFoundException("Protocol Handler Not Founder", ex);
-		} catch (Exception ex) {
-			throw new ProtocolException("Error While Creating Handler: " + ex);
+    public RequestHandler buildRequestHandler(String type) throws ProtocolException {
+        try {
+            return loadClassForQuery(type).newInstance();
+        } catch (ClassNotFoundException ex) {
+            throw new ProtocolNotFoundException("Protocol Handler Not Founder", ex);
+        } catch (Exception ex) {
+            throw new ProtocolException("Error While Creating Handler: " + ex);
 
-		}
-	}
+        }
+    }
 
-	@SuppressWarnings({"EmptyCatchBlock", "unchecked"})
+    @SuppressWarnings({"EmptyCatchBlock", "unchecked"})
     private Class<RequestHandler> loadClassForQuery(String handlerClassName) throws ClassNotFoundException {
-		try {
-			return (Class<RequestHandler>) Class.forName("org.openxdata.workflow.proto.handler." + handlerClassName);
-		} catch (ClassNotFoundException classNotFoundException) {
-		}
-		try {
-			return (Class<RequestHandler>) Class.forName(handlerClassName);
-		} catch (ClassNotFoundException classNotFoundException) {
-		}
-		return (Class<RequestHandler>) Class.forName("org.openxdata.workflow.proto.handler." + handlerClassName + "Handler");
-	}
+        try {
+            return (Class<RequestHandler>) Class.forName("org.openxdata.workflow.proto.handler." + handlerClassName);
+        } catch (ClassNotFoundException classNotFoundException) {
+        }
+        try {
+            return (Class<RequestHandler>) Class.forName(handlerClassName);
+        } catch (ClassNotFoundException classNotFoundException) {
+        }
+        return (Class<RequestHandler>) Class.forName("org.openxdata.workflow.proto.handler." + handlerClassName + "Handler");
+    }
 }
