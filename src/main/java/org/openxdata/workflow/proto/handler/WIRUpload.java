@@ -77,20 +77,20 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
                 context.setUploadResult(addSubjectKeyToXML(mWirData.getCaseId(), string.getXml()));
             } catch (Exception e) {
                 log.error("Error While saving Form Data: " + e);
-                addToUploadReponse(mWirData, string, e);
+                addToUploadResponse(mWirData, string, e);
             }
         }
 
 
     }
 
-    private void addToUploadReponse(MWorkItemData wirData, FormStudy formStudy, Exception e) {
-        WIRUploadResponse wirReponse = new WIRUploadResponse();
-        wirReponse.setErrorMessage(e.getMessage());
-        wirReponse.setFormDataId(formStudy.getFormData().getDataId());
-        wirReponse.setFormDefId(formStudy.getFormData().getDefId());
-        wirReponse.setWirRecId(wirData.getWirRecId());
-        this.wirResponseList.addWIRUploadResponse(wirReponse);
+    private void addToUploadResponse(MWorkItemData wirData, FormStudy formStudy, Exception e) {
+        WIRUploadResponse wirResponse = new WIRUploadResponse();
+        wirResponse.setErrorMessage(e.getMessage());
+        wirResponse.setFormDataId(formStudy.getFormData().getDataId());
+        wirResponse.setFormDefId(formStudy.getFormData().getDefId());
+        wirResponse.setWirRecId(wirData.getWirRecId());
+        this.wirResponseList.addWIRUploadResponse(wirResponse);
 
     }
 
@@ -145,7 +145,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
     }
 
     private String fromDocToString(Document doc) throws TransformerException {
-        Transformer transformer = getTranformer();
+        Transformer transformer = getTransformer();
 
         StreamResult result = new StreamResult(new StringWriter());
         DOMSource source = new DOMSource(doc);
@@ -156,7 +156,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
     private Transformer mTranformer;
 
-    private Transformer getTranformer() throws IllegalArgumentException, TransformerConfigurationException, TransformerFactoryConfigurationError {
+    private Transformer getTransformer() throws IllegalArgumentException, TransformerConfigurationException, TransformerFactoryConfigurationError {
         if (mTranformer == null) {
             mTranformer = TransformerFactory.newInstance().newTransformer();
             mTranformer.setOutputProperty(OutputKeys.INDENT, "yes");
