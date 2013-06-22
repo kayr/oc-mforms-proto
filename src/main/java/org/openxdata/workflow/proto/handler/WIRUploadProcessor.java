@@ -16,7 +16,7 @@ import java.util.Vector;
  */
 public class WIRUploadProcessor {
 
-    private List<FormStudy> formStudies = new ArrayList<FormStudy>();
+    private List<FormDataXml> formStudies = new ArrayList<FormDataXml>();
     private Vector<FormData> dataList;
     private Map<Integer, String> xformMap;
 
@@ -26,7 +26,7 @@ public class WIRUploadProcessor {
 
     }
 
-    public List<FormStudy> getFormStudies() {
+    public List<FormDataXml> getFormStudies() {
         try {
             if (formStudies.isEmpty()) {
                 deserialise();
@@ -41,7 +41,7 @@ public class WIRUploadProcessor {
 
         for (FormData formData : dataList) {
             String xml = deserializeFormToXML(formData, xformMap);
-            formStudies.add(new FormStudy(formData, xml));
+            formStudies.add(new FormDataXml(formData, xml));
         }
 
     }
@@ -61,12 +61,12 @@ public class WIRUploadProcessor {
         return xml;
     }
 
-    public static class FormStudy {
+    public static class FormDataXml {
 
         private FormData formData;
         private String xml;
 
-        public FormStudy(FormData formData, String xml) {
+        public FormDataXml(FormData formData, String xml) {
             this.formData = formData;
             this.xml = xml;
         }
@@ -85,6 +85,10 @@ public class WIRUploadProcessor {
 
         public void setXml(String xml) {
             this.xml = xml;
+        }
+
+        public int getDefId(){
+            return formData.getDefId();
         }
     }
 }
