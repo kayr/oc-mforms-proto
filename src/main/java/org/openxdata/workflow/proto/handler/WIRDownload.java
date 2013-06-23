@@ -1,5 +1,6 @@
 package org.openxdata.workflow.proto.handler;
 
+import org.apache.log4j.Logger;
 import org.openxdata.mforms.model.ResponseHeader;
 import org.openxdata.mforms.persistent.PersistentHelper;
 import org.openxdata.proto.WFSubmissionContext;
@@ -23,35 +24,14 @@ import java.util.Vector;
  */
 public class WIRDownload implements RequestHandler {
 
+    private final Logger log = Logger.getLogger(this.getClass().getName());
     @Override
     public void handleRequest(WFSubmissionContext context) throws ProtocolException {
         List<WorkItem> availableWorkitems = context.availableWorkitems();
         Vector<MWorkItem> workitems = new Vector<MWorkItem>();
-        System.out.println("Using ClassLoader: " + getClass().getClassLoader().toString());
+        log.debug("Using ClassLoader: " + getClass().getClassLoader().toString());
         for (WorkItem workitem : availableWorkitems) {
-            Vector<WIRFormReference> mobileFormRefs = new Vector<WIRFormReference>();
-            List<WorkItemFormRef> workItemFormRefs = workitem.getWorkitemForms();
-            for (WorkItemFormRef formRef : workItemFormRefs) {
-                WIRFormReference wirFormRef = new WIRFormReference();
-                wirFormRef.setStudyId(formRef.getStudyId());
-                wirFormRef.setFormId(formRef.getFormVersionId());
-                List<ParameterQuestionMap> preflled = formRef.getParamQuestionMap();
-                Vector<MQuestionMap> questionMaps = new Vector<MQuestionMap>();
-                for (ParameterQuestionMap strings : preflled) {
-                    MQuestionMap questionMap = new MQuestionMap();
-                    questionMap.setParameter(strings.getWorkitemParameter());
-                    questionMap.setQuestion(strings.getQuestionVariable());
-                    questionMap.setValue(strings.getValue());
-                    questionMap.setOutput(strings.isReadOnly());
-                    questionMaps.add(questionMap);
-                }
-                wirFormRef.setPrefilledQns(questionMaps);
-                mobileFormRefs.add(wirFormRef);
-            }
-            MWorkItem wir = new MWorkItem();
-            wir.setTaskName(workitem.getWorkitemName());
-            wir.setCaseId(workitem.getWorkitemId());
-            wir.setFormReferences(mobileFormRefs);
+            MWorkItem wir = toMobileWorkItem(workitem);
             workitems.add(wir);
         }
         sortByLabel(workitems);
@@ -63,6 +43,48 @@ public class WIRDownload implements RequestHandler {
             throw new ProtocolException("Failed to write the workitems to the stream", ex);
         }
 
+    }
+
+    private MWorkItem toMobileWorkItem(WorkItem workitem) {
+        Vector<WIRFormReference> mobileFormRefs = getMobileFormReferences(workitem);
+        MWorkItem wir = new MWorkItem();
+        wir.setTaskName(workitem.getWorkitemName());
+        wir.setCaseId(workitem.getWorkitemId());
+        wir.setFormReferences(mobileFormRefs);
+        return wir;
+    }
+
+    private Vector<WIRFormReference> getMobileFormReferences(WorkItem workitem) {
+        Vector<WIRFormReference> mobileFormRefs = new Vector<WIRFormReference>();
+        List<WorkItemFormRef> workItemFormRefs = workitem.getWorkitemForms();
+        for (WorkItemFormRef formRef : workItemFormRefs) {
+            WIRFormReference wirFormRef = toMobileWiFormReference(formRef);
+            mobileFormRefs.add(wirFormRef);
+        }
+        return mobileFormRefs;
+    }
+
+    private WIRFormReference toMobileWiFormReference(WorkItemFormRef formRef) {
+        WIRFormReference wirFormRef = new WIRFormReference();
+        wirFormRef.setStudyId(formRef.getStudyId());
+        wirFormRef.setFormId(formRef.getFormVersionId());
+        List<ParameterQuestionMap> prefills = formRef.getParamQuestionMap();
+        Vector<MQuestionMap> questionMaps = new Vector<MQuestionMap>();
+        for (ParameterQuestionMap strings : prefills) {
+            MQuestionMap questionMap = toQuestionMap(strings);
+            questionMaps.add(questionMap);
+        }
+        wirFormRef.setPrefilledQns(questionMaps);
+        return wirFormRef;
+    }
+
+    private MQuestionMap toQuestionMap(ParameterQuestionMap paramQnMaps) {
+        MQuestionMap questionMap = new MQuestionMap();
+        questionMap.setParameter(paramQnMaps.getWorkitemParameter());
+        questionMap.setQuestion(paramQnMaps.getQuestionVariable());
+        questionMap.setValue(paramQnMaps.getValue());
+        questionMap.setOutput(paramQnMaps.isReadOnly());
+        return questionMap;
     }
 
     private void sortByLabel(Vector<MWorkItem> workitems) {

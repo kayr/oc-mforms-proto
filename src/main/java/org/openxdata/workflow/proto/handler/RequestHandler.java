@@ -20,10 +20,8 @@ public interface RequestHandler {
     /**
      * Processes the request and and builds the necessary reply
      *
-     * @param user User who sent request
-     * @param is   Input stream from the requester
-     * @param os   Output stream for the requester.
-     * @throws IOException
+     * @param context the workflow submission context
+     * @throws ProtocolException if an error occurs
      */
     public void handleRequest(WFSubmissionContext context) throws ProtocolException;
 }
