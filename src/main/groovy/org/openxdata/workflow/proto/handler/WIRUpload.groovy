@@ -90,6 +90,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
         StringWriter writer = new StringWriter()
         def xml = new MarkupBuilder(writer)
 
+        def formDataId = context.setUploadResult(formDataXml.getXml());
         xml."${workItem.parameters.decomposition}" {
             paramsQuestionMapping.each { wirParameterName, qnVariableName ->
 
@@ -105,8 +106,8 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
                 }
 
             }
+            xml.formDataID(formDataId)
         }
-        context.setUploadResult(formDataXml.getXml());
         context.submitWorkitem(caseId, writer.toString());
     }
 
