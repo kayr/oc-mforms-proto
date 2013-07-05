@@ -128,7 +128,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
                 answer = encodeMultimedia(questionData)
                 break
             case QTN_TYPE_BOOLEAN:
-                answer = questionData.getAnswer().toString().equalsIgnoreCase("Yes") + ""
+                answer = questionData.getTextAnswer().toString().equalsIgnoreCase("Yes").toString()
                 break
             case QTN_TYPE_NUMERIC:
                 answer = extractNumber(questionData)
