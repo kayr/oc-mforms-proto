@@ -25,6 +25,7 @@ import java.util.Vector;
 public class WIRDownload implements RequestHandler {
 
     private final Logger log = Logger.getLogger(this.getClass().getName());
+
     @Override
     public void handleRequest(WFSubmissionContext context) throws ProtocolException {
         List<WorkItem> availableWorkitems = context.availableWorkitems();
@@ -48,10 +49,24 @@ public class WIRDownload implements RequestHandler {
     private MWorkItem toMobileWorkItem(WorkItem workitem) {
         Vector<WIRFormReference> mobileFormRefs = getMobileFormReferences(workitem);
         MWorkItem wir = new MWorkItem();
-        wir.setTaskName(workitem.getWorkitemName());
+        wir.setTaskName(workitem.getWorkitemName()+getTitleFromWiFormRef(mobileFormRefs));
         wir.setCaseId(workitem.getWorkitemId());
         wir.setFormReferences(mobileFormRefs);
         return wir;
+    }
+
+    String getTitleFromWiFormRef(Vector<WIRFormReference> workItemFormRefs) {
+        if (workItemFormRefs == null)
+            return "";
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("{");
+        for (WIRFormReference ref : workItemFormRefs) {
+
+            builder.append(ref.getPrefilledString());
+        }
+        builder.append("}");
+        return builder.toString();
     }
 
     private Vector<WIRFormReference> getMobileFormReferences(WorkItem workitem) {
@@ -83,7 +98,7 @@ public class WIRDownload implements RequestHandler {
         questionMap.setParameter(paramQnMaps.getWorkitemParameter());
         questionMap.setQuestion(paramQnMaps.getQuestionVariable());
         questionMap.setValue(paramQnMaps.getValue());
-        questionMap.setOutput(paramQnMaps.isReadOnly());
+        questionMap.setOutput(!paramQnMaps.isReadOnly());
         return questionMap;
     }
 
