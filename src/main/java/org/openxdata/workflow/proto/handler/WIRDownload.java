@@ -51,6 +51,7 @@ public class WIRDownload implements RequestHandler {
         MWorkItem wir = new MWorkItem();
         wir.setTaskName(workitem.getWorkitemName()+getTitleFromWiFormRef(mobileFormRefs));
         wir.setCaseId(workitem.getWorkitemId());
+        wir.setCloningAllowed(wir.getCaseId().contains(":"));
         wir.setFormReferences(mobileFormRefs);
         return wir;
     }

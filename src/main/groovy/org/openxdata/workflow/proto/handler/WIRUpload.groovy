@@ -106,7 +106,8 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
                 }
 
             }
-            xml.formDataID(formDataId)
+            if (!workItem.workitemId.contains(':'))
+                xml.formDataID(formDataId)
         }
         context.submitWorkitem(caseId, writer.toString());
     }
