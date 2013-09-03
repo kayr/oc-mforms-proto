@@ -23,7 +23,7 @@ import static org.openxdata.mforms.model.QuestionDef.*
 public class WIRUpload extends DeserializationListenerAdapter implements RequestHandler {
 
     private final Logger log = Logger.getLogger(this.getClass().getName());
-    private WFSubmissionContext context;
+    WFSubmissionContext context;
     private WIRUploadResponseList wirResponseList = new WIRUploadResponseList();
 
     @Override
@@ -65,7 +65,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
             try {
                 processFormDataAndWorkItem(formDataXml, mWirData.getCaseId());
             } catch (Exception e) {
-                Throwable t = e.cause == null ? e : e.cause
+                Throwable t = e.cause ?: e
                 log.error("Error While saving Form Data: ", t);
                 addToUploadResponse(mWirData, formDataXml, t);
             }
@@ -91,6 +91,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
         def xml = new MarkupBuilder(writer)
 
         def formDataId = context.setUploadResult(formDataXml.getXml());
+        def params = getParams(workItem)
         xml."${workItem.parameters.decomposition}" {
             paramsQuestionMapping.each { wirParameterName, qnVariableName ->
 
@@ -102,7 +103,12 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
                 } else {//To continue.. Wrong entry
                     // WorkItemQuestion qn = new WorkItemQuestion(paramQnEntry.getKey(), extractAnswer(question));
-                    xml."${wirParameterName}"(extractAnswer(question))
+                    if (workItem.workitemId.contains(':')) {
+                        def answer = params."$wirParameterName" ?: extractAnswer(question)
+                        xml."${wirParameterName}"(answer)
+                    } else {
+                        xml."${wirParameterName}"(extractAnswer(question))
+                    }
                 }
 
             }
@@ -117,7 +123,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
         def questionType = questionData.getDef().getType()
 
         if (questionData.getAnswer() == null && questionType != QTN_TYPE_NUMERIC && questionType != QTN_TYPE_DATE) {
-            log.trace("Extracting answer from question: [$questionData] and Answer = [null]");
+            log.warn("Extracting answer from question: [$questionData] and Answer = [null]");
             return null;
         }
 
@@ -216,6 +222,24 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
         wirResponse.setWirRecId(wirData.getWirRecId());
         this.wirResponseList.addWIRUploadResponse(wirResponse);
 
+    }
+
+    Map getParams(WorkItem workItem) {
+        String script = workItem.parameters."spec.settings"
+
+        if (!workItem.workitemId.contains(':') || !script) return [:]
+
+        def user = context.getLoggedInUser()
+
+        log.trace("Reading default launch settings")
+        Binding binding = new Binding(user: user[1])
+        GroovyShell gs = new GroovyShell(binding)
+
+        ConfigObject config = gs.evaluate(script)
+        log.info("Default Launch Setting: $config")
+        if (config.isEmpty())
+            log.warn("No configuration found for ")
+        return config
     }
 
     private void writeUploadResponse(DataOutputStream out) throws ProtocolException {
