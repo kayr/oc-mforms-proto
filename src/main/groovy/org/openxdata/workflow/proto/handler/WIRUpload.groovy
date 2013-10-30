@@ -74,13 +74,14 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
     void processFormDataAndWorkItem(FormDataXml formDataXml, String caseId) {
 
-        Map<String, String> paramsQuestionMapping = context.getOutParamsQuestionMapping(formDataXml.getDefId(), caseId);
         WorkItem workItem = context.getWorkitem(caseId)
 
         if (!workItem) {
             log.error "workitem for caseId[$caseId] not found.. discarding"
             return
         }
+
+        Map<String, String> paramsQuestionMapping = context.getOutParamsQuestionMapping(formDataXml.getDefId(), caseId);
 
         FormData mobileFormData = formDataXml.formData
         String formVarName = mobileFormData.def.variableName
