@@ -218,7 +218,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
     private void addToUploadResponse(MWorkItemData wirData, FormDataXml formDataXml, Throwable e) {
         WIRUploadResponse wirResponse = new WIRUploadResponse();
         wirResponse.setErrorMessage(e.getMessage());
-        wirResponse.setFormDataId(formDataXml.getFormData().getDataId());
+        wirResponse.setFormDataId(formDataXml.getFormData().getRecordId());
         wirResponse.setFormDefId(formDataXml.getFormData().getDefId());
         wirResponse.setWirRecId(wirData.getWirRecId());
         this.wirResponseList.addWIRUploadResponse(wirResponse);
