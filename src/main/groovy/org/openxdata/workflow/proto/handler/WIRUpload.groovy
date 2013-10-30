@@ -100,7 +100,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
 
                 if (question == null) {
 
-                    log.warn("ParamQuestion entry form [$formVarName] workItem [$workItem.workitemName-$workItem.workitemId] = [$wirParameterName - $qnVariableName] Has no corresponding question");
+                    log.warn("ParamQuestion entry form [$formVarName] workItem [$workItem.workitemName - $workItem.workitemId] = [$wirParameterName - $qnVariableName] Has no corresponding question");
 
                 } else {//To continue.. Wrong entry
                     // WorkItemQuestion qn = new WorkItemQuestion(paramQnEntry.getKey(), extractAnswer(question));
