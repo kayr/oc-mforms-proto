@@ -120,10 +120,13 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
     }
 
 
-    private String extractAnswer(QuestionData questionData) {
+    String extractAnswer(QuestionData questionData) {
         def questionType = questionData.getDef().getType()
 
-        if (questionData.getAnswer() == null && questionType != QTN_TYPE_NUMERIC && questionType != QTN_TYPE_DATE) {
+        if (questionData.getAnswer() == null &&
+                questionType != QTN_TYPE_NUMERIC &&
+                questionType != QTN_TYPE_DATE &&
+                questionType != QTN_TYPE_BOOLEAN) {
             log.warn("Extracting answer from question: [$questionData] and Answer = [null]");
             return null;
         }
@@ -136,7 +139,7 @@ public class WIRUpload extends DeserializationListenerAdapter implements Request
                 answer = encodeMultimedia(questionData)
                 break
             case QTN_TYPE_BOOLEAN:
-                answer = questionData.getTextAnswer().toString().equalsIgnoreCase("Yes").toString()
+                answer = ("$questionData.answer").equalsIgnoreCase("true").toString()
                 break
             case QTN_TYPE_NUMERIC:
                 answer = extractNumber(questionData)

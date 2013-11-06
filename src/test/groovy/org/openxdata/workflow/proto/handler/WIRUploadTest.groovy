@@ -2,7 +2,8 @@ package org.openxdata.workflow.proto.handler
 
 import org.gmock.GMockTestCase
 import org.junit.Test
-import org.openxdata.proto.SubmissionContext
+import org.openxdata.mforms.model.QuestionData
+import org.openxdata.mforms.model.QuestionDef
 import org.openxdata.proto.WFSubmissionContext
 import org.openxdata.proto.model.WorkItem
 
@@ -38,8 +39,8 @@ class WIRUploadTest extends GMockTestCase {
 
 
         def text = getClass().getResourceAsStream('/SpecConfig.groovy').text
-        WorkItem wi = new WorkItem('AFP:21','Collect')
-        wi.addParameter('spec.settings',text)
+        WorkItem wi = new WorkItem('AFP:21', 'Collect')
+        wi.addParameter('spec.settings', text)
 
         play {
             def params = uploader.getParams(wi)
@@ -58,12 +59,23 @@ class WIRUploadTest extends GMockTestCase {
 
 
         def text = getClass().getResourceAsStream('/SpecConfig.groovy').text
-        WorkItem wi = new WorkItem('AFP:21','Collect')
-        wi.addParameter('spec.settings',text)
+        WorkItem wi = new WorkItem('AFP:21', 'Collect')
+        wi.addParameter('spec.settings', text)
 
         play {
             def params = uploader.getParams(wi)
             assert params.size() == 0
         }
+    }
+
+    @Test
+    void testGetTextAnswerFromBoolean() {
+        def qnData = new QuestionData(new QuestionDef((short) 1, 'Is Boolean', '', false, QuestionDef.QTN_TYPE_BOOLEAN, null, true, true, false, 'is_bool', new Object()))
+
+        WIRUpload upload = new WIRUpload()
+        assert upload.extractAnswer(qnData) == 'false'
+
+        qnData.setAnswer(true)
+        assert upload.extractAnswer(qnData) == 'true'
     }
 }
